@@ -1,7 +1,7 @@
 package days
 
-import AmplifiersLoop
-import OpcodeComputer
+import opcode.AmplifiersLoop
+import opcode.OpcodeComputer
 import kotlin.math.max
 
 private fun main() {
@@ -19,7 +19,8 @@ fun day7Part2(controllerSoftware: List<Long>): Long? {
             for (c in (5..9).minus(listOf(a, b))) {
                 for (d in (5..9).minus(listOf(a, b, c))) {
                     for (e in (5..9).minus(listOf(a, b, c, d))) {
-                        val amplifiersLoop = AmplifiersLoop(controllerSoftware, listOf(a, b, c, d, e))
+                        val amplifiersLoop =
+                            AmplifiersLoop(controllerSoftware, listOf(a, b, c, d, e))
                         val signal = amplifiersLoop.run().first()
                         maxSignal = maxSignal?.let { max(it, signal) } ?: signal
                     }

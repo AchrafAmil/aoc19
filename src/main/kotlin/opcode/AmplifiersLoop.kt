@@ -1,3 +1,5 @@
+package opcode
+
 class AmplifiersLoop(private val controllerSoftware: List<Long>, private val phaseSettings: List<Int>) {
     private val amplifiers = List(phaseSettings.size) { index ->
         RealtimeOpcodeComputer(controllerSoftware).also { it.name = "computer N°$index" }

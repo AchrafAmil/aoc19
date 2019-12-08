@@ -1,3 +1,7 @@
+package opcode
+
+import digits
+
 class RealtimeOpcodeComputer(software: List<Long>) {
     private val memory = software.toMutableList()
 

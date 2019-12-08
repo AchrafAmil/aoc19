@@ -2,6 +2,7 @@ import days.allPossiblePhaseSettings
 import days.compute
 import days.fiveAmplifiers
 import days.massIncludingNecessaryFuel
+import opcode.OpcodeComputer
 import org.junit.Assert
 import org.junit.Test
 

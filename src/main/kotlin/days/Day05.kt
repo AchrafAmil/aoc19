@@ -1,6 +1,6 @@
 package days
 
-import OpcodeComputer
+import opcode.OpcodeComputer
 
 private fun main() {
     val ints = INPUT

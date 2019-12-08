@@ -1,3 +1,7 @@
+package opcode
+
+import digits
+
 class OpcodeComputer(software: List<Int>) {
     private val memory = software.toMutableList()
 
