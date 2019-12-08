@@ -1,4 +1,6 @@
+import days.allPossiblePhaseSettings
 import days.compute
+import days.fiveAmplifiers
 import days.massIncludingNecessaryFuel
 import org.junit.Assert
 import org.junit.Test
@@ -32,8 +34,8 @@ class Tests {
         val ints = input.split(',')
             .map { it.toInt() }
 
-        val result0 = compute(ints, listOf(0))
-        val result1 = compute(ints, listOf(42))
+        val result0 = OpcodeComputer(ints).compute(listOf(0))
+        val result1 = OpcodeComputer(ints).compute(listOf(42))
 
         Assert.assertEquals(listOf(0), result0)
         Assert.assertEquals(listOf(1), result1)
@@ -56,6 +58,42 @@ class Tests {
         val ints = input.split(',')
             .map { it.toInt() }
 
-        return compute(ints, listOf(args))
+        return OpcodeComputer(ints).compute(listOf(args))
+    }
+
+    @Test
+    fun `day 7 test output of specified phase settings`() {
+        val input = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0"
+            .split(',')
+            .map { it.toInt() }
+        val phaseSettings = listOf(4, 3, 2, 1, 0)
+
+        val output = fiveAmplifiers(input, phaseSettings)
+
+        Assert.assertEquals(43210, output)
+    }
+
+    @Test
+    fun `day 7 find highest score's phase settings`() {
+        val controllerSoftware = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0"
+            .split(',')
+            .map { it.toInt() }
+
+        val allPossiblePhaseSettings = allPossiblePhaseSettings(controllerSoftware)
+        val output = allPossiblePhaseSettings.maxBy { it.value }?.value
+
+        Assert.assertEquals(43210, output)
+    }
+
+    @Test
+    fun `day 7 find highest score's phase settings 2`() {
+        val controllerSoftware = "3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0"
+            .split(',')
+            .map { it.toInt() }
+
+        val allPossiblePhaseSettings = allPossiblePhaseSettings(controllerSoftware)
+        val output = allPossiblePhaseSettings.maxBy { it.value }?.value
+
+        Assert.assertEquals(54321, output)
     }
 }
