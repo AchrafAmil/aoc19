@@ -1,0 +1,1 @@
+fun Int.digits(): List<Int> = toString().toList().map { "$it".toInt() }
