@@ -98,6 +98,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
             else -> throw  IllegalArgumentException()
         }
         writeMemory(params[2], result, paramsModes.getOrElse(2) { MODE_POSITION })
+        println("instruction with opcode $opcode writing $result as result of $first & $second")
     }
 
     private fun readMemory(index: Int, accessMode: Int): Long {
@@ -115,7 +116,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
 
     private fun writeMemory(index: Int, value: Long, accessMode: Int = 0) {
         when (accessMode) {
-            MODE_POSITION -> memory[memory[index].toInt()]
+            MODE_POSITION -> memory[memory[index].toInt()] = value
             MODE_RELATIVE -> memory[memory[index].toInt() + relativeBase] = value
             MODE_IMMEDIATE -> throw IllegalArgumentException("tried to write in immediate mode")
             else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
