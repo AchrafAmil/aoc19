@@ -3,13 +3,20 @@ package opcode
 import digits
 
 class RealtimeOpcodeComputer(software: List<Long>) {
-    private val memory = software.toMutableList()
+    private val memory: MutableMap<Int, Long>
     private var relativeBase = 0
 
     var name: String? = null
 
     var inputStream = mutableListOf<Long>()
     var outputStream = mutableListOf<Long>()
+
+    init {
+        memory = software
+            .mapIndexed { index, byte -> index to byte }.toMap()
+            .toMutableMap()
+            .withDefault { DEFAULT_MEMORY_VALUE }
+    }
 
     fun start() {
         var index = 0
@@ -31,7 +38,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     }
                     synchronized(inputStream) {
                         println("$name reading from stream = $inputStream")
-                        writeMemory(index + 1, inputStream.removeAt(0), MODE_POSITION)
+                        writeMemory(index + 1, inputStream.removeAt(0), paramsModes.getOrElse(0) { MODE_POSITION })
                     }
                     index += 2
                 }
@@ -51,7 +58,8 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     index = jumpIfFalse(index, paramsModes)
                 }
                 9 -> {
-                    relativeBase += paramsModes.getOrElse(0) { 0 }
+                    relativeBase += readMemory(index + 1, paramsModes.getOrElse(0) { MODE_POSITION }).toInt()
+                    index += 2
                 }
                 99 -> {
                     println("$name about to halt. Bye.")
@@ -102,22 +110,18 @@ class RealtimeOpcodeComputer(software: List<Long>) {
     }
 
     private fun readMemory(index: Int, accessMode: Int): Long {
-        return try {
-            when (accessMode) {
-                MODE_POSITION -> memory[memory[index].toInt()]
-                MODE_IMMEDIATE -> memory[index]
-                MODE_RELATIVE -> memory[memory[index].toInt() + relativeBase]
-                else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
-            }
-        } catch (_: IndexOutOfBoundsException) {
-            DEFAULT_MEMORY_VALUE
+        return when (accessMode) {
+            MODE_POSITION -> memory.getValue(memory.getValue(index).toInt())
+            MODE_IMMEDIATE -> memory.getValue(index)
+            MODE_RELATIVE -> memory.getValue(memory.getValue(index).toInt() + relativeBase)
+            else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
         }
     }
 
     private fun writeMemory(index: Int, value: Long, accessMode: Int = 0) {
         when (accessMode) {
-            MODE_POSITION -> memory[memory[index].toInt()] = value
-            MODE_RELATIVE -> memory[memory[index].toInt() + relativeBase] = value
+            MODE_POSITION -> memory[memory.getValue(index).toInt()] = value
+            MODE_RELATIVE -> memory[memory.getValue(index).toInt() + relativeBase] = value
             MODE_IMMEDIATE -> throw IllegalArgumentException("tried to write in immediate mode")
             else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
         }

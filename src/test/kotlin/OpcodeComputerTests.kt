@@ -1,4 +1,5 @@
 import opcode.AmplifiersLoop
+import opcode.RealtimeOpcodeComputer
 import org.junit.Assert
 import org.junit.Test
 
@@ -27,5 +28,31 @@ class OpcodeComputerTests {
         val output = amplifiersLoop.run()
 
         Assert.assertEquals(listOf(18_216L), output)
+    }
+
+    @Test
+    fun `quine test`() {
+        val software =
+            "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
+                .split(',')
+                .map { it.toLong() }
+        val computer = RealtimeOpcodeComputer(software)
+
+        computer.start()
+
+        Assert.assertEquals(software, computer.outputStream.toList())
+    }
+
+    @Test
+    fun `16 digits output test`() {
+        val software =
+            "1102,34915192,34915192,7,4,7,99,0"
+                .split(',')
+                .map { it.toLong() }
+        val computer = RealtimeOpcodeComputer(software)
+
+        computer.start()
+
+        Assert.assertEquals(16, computer.outputStream.first().toString().length)
     }
 }
