@@ -4,6 +4,7 @@ import digits
 
 class RealtimeOpcodeComputer(software: List<Long>) {
     private val memory = software.toMutableList()
+    private var relativeBase = 0
 
     var name: String? = null
 
@@ -13,14 +14,13 @@ class RealtimeOpcodeComputer(software: List<Long>) {
     fun start() {
         var index = 0
         loop@ while (index < memory.size) {
-            val instructionDigits = memory[index].toInt().digits()
+            val instructionDigits = readMemory(index, MODE_IMMEDIATE).toInt().digits()
 
             val opcode = instructionDigits.takeLast(2).joinToString("").toInt()
             val paramsModes = instructionDigits.dropLast(2).reversed()
             when (opcode) {
                 1, 2, 7, 8 -> {
-                    val params = listOf(memory[index + 1], memory[index + 2], memory[index + 3])
-                    memory.applyInstruction(opcode, paramsModes, params)
+                    applyInstruction(opcode, paramsModes, listOf(index + 1, index + 2, index + 3))
                     index += 4
                 }
                 3 -> {
@@ -31,71 +31,65 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     }
                     synchronized(inputStream) {
                         println("$name reading from stream = $inputStream")
-                        memory[memory[index + 1].toInt()] = inputStream.removeAt(0)
+                        writeMemory(index + 1, inputStream.removeAt(0), MODE_POSITION)
                     }
                     index += 2
                 }
                 4 -> {
                     val paramMode = paramsModes.getOrElse(0) { 0 }
                     synchronized(outputStream) {
-                        val value = memory.accessParam(paramMode, index + 1)
+                        val value = readMemory(index + 1, paramMode)
                         println("$name writing $value to stream = $outputStream")
                         outputStream.add(value)
                     }
                     index += 2
                 }
                 5 -> {
-                    index = memory.jumpIfTrue(index, paramsModes)
+                    index = jumpIfTrue(index, paramsModes)
                 }
                 6 -> {
-                    index = memory.jumpIfFalse(index, paramsModes)
+                    index = jumpIfFalse(index, paramsModes)
+                }
+                9 -> {
+                    relativeBase += paramsModes.getOrElse(0) { 0 }
                 }
                 99 -> {
                     println("$name about to halt. Bye.")
                     return
                 }
-                else -> throw IllegalStateException()
+                else -> throw IllegalStateException("unknown opcode instruction: $opcode")
             }
         }
     }
 
-    private fun MutableList<Long>.jumpIfTrue(
+    private fun jumpIfTrue(
         index: Int,
         paramsModes: List<Int>
     ): Int = jumpIf(index, paramsModes, isJumpIfFalse = false)
 
-    private fun MutableList<Long>.jumpIfFalse(
+    private fun jumpIfFalse(
         index: Int,
         paramsModes: List<Int>
     ): Int = jumpIf(index, paramsModes, isJumpIfFalse = true)
 
-    private fun MutableList<Long>.jumpIf(
+    private fun jumpIf(
         index: Int,
         paramsModes: List<Int>,
         isJumpIfFalse: Boolean
     ): Int {
         val firstParamMode = paramsModes.getOrElse(0) { 0 }
-        val condition = accessParam(firstParamMode, index + 1).toInt()
+        val condition = readMemory(index + 1, firstParamMode).toInt()
         return if ((condition != 0) xor isJumpIfFalse) {
             val secondParamMode = paramsModes.getOrElse(1) { 0 }
-            accessParam(secondParamMode, index + 2).toInt()
+            readMemory(index + 2, secondParamMode).toInt()
         } else {
             index + 3
         }
     }
 
-    private fun MutableList<Long>.accessParam(
-        mode: Int,
-        index: Int
-    ): Long = when (mode) {
-        0 -> this[this[index].toInt()]
-        1 -> this[index]
-        else -> throw IllegalArgumentException("parameter mode $mode not recognized")
-    }
-
-    private fun MutableList<Long>.applyInstruction(opcode: Int, paramsModes: List<Int>, params: List<Long>) {
-        val first = if (paramsModes.getOrNull(0) == 1) params[0] else this[params[0].toInt()]
-        val second = if (paramsModes.getOrNull(1) == 1) params[1] else this[params[1].toInt()]
+    private fun applyInstruction(opcode: Int, paramsModes: List<Int>, params: List<Int>) {
+        val first = readMemory(params[0], paramsModes.getOrElse(0) { MODE_POSITION })
+        val second = readMemory(params[1], paramsModes.getOrElse(1) { MODE_POSITION })
         val result = when (opcode) {
             1 -> first + second
             2 -> first * second
@@ -103,6 +97,35 @@ class RealtimeOpcodeComputer(software: List<Long>) {
             8 -> if (first == second) 1L else 0L
             else -> throw  IllegalArgumentException()
         }
-        this[params[2].toInt()] = result
+        writeMemory(params[2], result, paramsModes.getOrElse(2) { MODE_POSITION })
+    }
+
+    private fun readMemory(index: Int, accessMode: Int): Long {
+        return try {
+            when (accessMode) {
+                MODE_POSITION -> memory[memory[index].toInt()]
+                MODE_IMMEDIATE -> memory[index]
+                MODE_RELATIVE -> memory[memory[index].toInt() + relativeBase]
+                else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
+            }
+        } catch (_: IndexOutOfBoundsException) {
+            DEFAULT_MEMORY_VALUE
+        }
+    }
+
+    private fun writeMemory(index: Int, value: Long, accessMode: Int = 0) {
+        when (accessMode) {
+            MODE_POSITION -> memory[memory[index].toInt()]
+            MODE_RELATIVE -> memory[memory[index].toInt() + relativeBase] = value
+            MODE_IMMEDIATE -> throw IllegalArgumentException("tried to write in immediate mode")
+            else -> throw IllegalArgumentException("parameter mode $accessMode not recognized")
+        }
+    }
+
+    companion object {
+        private const val DEFAULT_MEMORY_VALUE = 0L
+        private const val MODE_POSITION = 0
+        private const val MODE_IMMEDIATE = 1
+        private const val MODE_RELATIVE = 2
     }
 }

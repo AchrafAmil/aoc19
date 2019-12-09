@@ -2,6 +2,7 @@ package opcode
 
 import digits
 
+@Deprecated("use RealtimeOpcodeComputer")
 class OpcodeComputer(software: List<Int>) {
     private val memory = software.toMutableList()
 

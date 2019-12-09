@@ -1,7 +1,7 @@
 package days
 
 import opcode.AmplifiersLoop
-import opcode.OpcodeComputer
+import opcode.RealtimeOpcodeComputer
 import kotlin.math.max
 
 private fun main() {
@@ -56,14 +56,14 @@ fun allPossiblePhaseSettings(controllerSoftware: List<Int>): MutableMap<List<Int
 }
 
 fun fiveAmplifiers(controllerSoftware: List<Int>, phaseSettings: List<Int>): Int {
-    var previousAmplifierSignalOutput = 0
+    var previousAmplifierSignalOutput = 0L
     for (i in 0..4) {
-        val amplifierOutput = OpcodeComputer(controllerSoftware).compute(
-            listOf(phaseSettings[i], previousAmplifierSignalOutput)
-        )
-        previousAmplifierSignalOutput = amplifierOutput.first()
+        val realtimeOpcodeComputer = RealtimeOpcodeComputer(controllerSoftware.map { it.toLong() })
+        realtimeOpcodeComputer.inputStream = mutableListOf(phaseSettings[i].toLong(), previousAmplifierSignalOutput)
+        realtimeOpcodeComputer.start()
+        previousAmplifierSignalOutput = realtimeOpcodeComputer.outputStream.first()
     }
-    return previousAmplifierSignalOutput
+    return previousAmplifierSignalOutput.toInt()
 }
 
 private const val INPUT =
