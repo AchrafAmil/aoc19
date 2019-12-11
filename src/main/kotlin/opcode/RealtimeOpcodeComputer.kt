@@ -10,7 +10,8 @@ class RealtimeOpcodeComputer(software: List<Long>) {
 
     var inputStream = mutableListOf<Long>()
     var outputStream = mutableListOf<Long>()
-    var count = 0
+
+    var halted = false
 
     init {
         memory = software
@@ -20,13 +21,13 @@ class RealtimeOpcodeComputer(software: List<Long>) {
     }
 
     fun start() {
+        halted = false
         var index = 0
         loop@ while (index < memory.size) {
             val instructionDigits = readMemory(index, MODE_IMMEDIATE).toInt().digits()
 
             val opcode = instructionDigits.takeLast(2).joinToString("").toInt()
             val paramsModes = instructionDigits.dropLast(2).reversed()
-            count++
             when (opcode) {
                 1, 2, 7, 8 -> {
                     applyInstruction(opcode, paramsModes, listOf(index + 1, index + 2, index + 3))
@@ -36,7 +37,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     if (inputStream.isEmpty()) println("$name waiting for input")
                     while (inputStream.isEmpty()) {
                         // wait for input
-                        Thread.sleep(10)
+                        Thread.sleep(2)
                     }
                     synchronized(inputStream) {
                         println("$name reading from stream = $inputStream")
@@ -65,7 +66,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                 }
                 99 -> {
                     println("$name about to halt. Bye.")
-                    println(count)
+                    halted = true
                     return
                 }
                 else -> throw IllegalStateException("unknown opcode instruction: $opcode")
@@ -109,7 +110,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
             else -> throw  IllegalArgumentException()
         }
         writeMemory(params[2], result, paramsModes.getOrElse(2) { MODE_POSITION })
-        println("instruction with opcode $opcode writing $result as result of $first & $second")
+        //println("instruction with opcode $opcode writing $result as result of $first & $second")
     }
 
     private fun readMemory(index: Int, accessMode: Int): Long {
