@@ -10,6 +10,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
 
     var inputStream = mutableListOf<Long>()
     var outputStream = mutableListOf<Long>()
+    var count = 0
 
     init {
         memory = software
@@ -25,6 +26,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
 
             val opcode = instructionDigits.takeLast(2).joinToString("").toInt()
             val paramsModes = instructionDigits.dropLast(2).reversed()
+            count++
             when (opcode) {
                 1, 2, 7, 8 -> {
                     applyInstruction(opcode, paramsModes, listOf(index + 1, index + 2, index + 3))
@@ -63,6 +65,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                 }
                 99 -> {
                     println("$name about to halt. Bye.")
+                    println(count)
                     return
                 }
                 else -> throw IllegalStateException("unknown opcode instruction: $opcode")
