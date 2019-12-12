@@ -235,4 +235,46 @@ class Tests {
 
         Assert.assertEquals(XY(3, 5), result)
     }
+
+    @Test
+    fun `day 12 simulate gravity after 10 step`() {
+        val input = listOf(
+            Moon(XYZ(-1, 0, 2), XYZ(0, 0, 0)),
+            Moon(XYZ(2, -10, -7), XYZ(0, 0, 0)),
+            Moon(XYZ(4, -8, 8), XYZ(0, 0, 0)),
+            Moon(XYZ(3, 5, -1), XYZ(0, 0, 0))
+        )
+
+        val afterTenSteps = simulateGravity(input, 10)
+
+        Assert.assertEquals(179, afterTenSteps.sumBy { it.position.energy * it.velocity.energy })
+    }
+
+    @Test
+    fun `day 12 should return to initial state after 2772 step`() {
+        val input = listOf(
+            Moon(XYZ(-1, 0, 2), XYZ(0, 0, 0)),
+            Moon(XYZ(2, -10, -7), XYZ(0, 0, 0)),
+            Moon(XYZ(4, -8, 8), XYZ(0, 0, 0)),
+            Moon(XYZ(3, 5, -1), XYZ(0, 0, 0))
+        )
+
+        val result = simulateGravity(input, 2772)
+
+        Assert.assertEquals(input, result)
+    }
+
+    @Test
+    fun `day 12 should find repeat period`() {
+        val input = listOf(
+            Moon(XYZ(-1, 0, 2), XYZ(0, 0, 0)),
+            Moon(XYZ(2, -10, -7), XYZ(0, 0, 0)),
+            Moon(XYZ(4, -8, 8), XYZ(0, 0, 0)),
+            Moon(XYZ(3, 5, -1), XYZ(0, 0, 0))
+        )
+
+        val result = findPeriod(input)
+
+        Assert.assertEquals(2772, result)
+    }
 }
