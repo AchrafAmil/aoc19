@@ -2,7 +2,7 @@ package opcode
 
 import digits
 
-class RealtimeOpcodeComputer(software: List<Long>) {
+class RealtimeOpcodeComputer(software: List<Long>, val isVerbose: Boolean = true) {
     private val memory: MutableMap<Int, Long>
     private var relativeBase = 0
 
@@ -12,6 +12,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
     var outputStream = mutableListOf<Long>()
 
     var halted = false
+    var waitingForInput = false
 
     init {
         memory = software
@@ -22,6 +23,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
 
     fun start() {
         halted = false
+        waitingForInput = false
         var index = 0
         loop@ while (index < memory.size) {
             val instructionDigits = readMemory(index, MODE_IMMEDIATE).toInt().digits()
@@ -34,13 +36,14 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     index += 4
                 }
                 3 -> {
-                    if (inputStream.isEmpty()) println("$name waiting for input")
-                    while (inputStream.isEmpty()) {
-                        // wait for input
-                        Thread.sleep(2)
+                    if (inputStream.isEmpty()) {
+                        if (isVerbose) println("$name waiting for input")
+                        waitingForInput = true
+                        while (inputStream.isEmpty()) Thread.sleep(2)
+                        waitingForInput = false
                     }
                     synchronized(inputStream) {
-                        println("$name reading from stream = $inputStream")
+                        if (isVerbose) println("$name reading from stream")
                         writeMemory(index + 1, inputStream.removeAt(0), paramsModes.getOrElse(0) { MODE_POSITION })
                     }
                     index += 2
@@ -49,7 +52,7 @@ class RealtimeOpcodeComputer(software: List<Long>) {
                     val paramMode = paramsModes.getOrElse(0) { 0 }
                     synchronized(outputStream) {
                         val value = readMemory(index + 1, paramMode)
-                        println("$name writing $value to stream = $outputStream")
+                        if (isVerbose) println("$name writing $value to stream = $outputStream")
                         outputStream.add(value)
                     }
                     index += 2
@@ -110,7 +113,6 @@ class RealtimeOpcodeComputer(software: List<Long>) {
             else -> throw  IllegalArgumentException()
         }
         writeMemory(params[2], result, paramsModes.getOrElse(2) { MODE_POSITION })
-        //println("instruction with opcode $opcode writing $result as result of $first & $second")
     }
 
     private fun readMemory(index: Int, accessMode: Int): Long {
