@@ -1,5 +1,6 @@
 package days
 
+import XY
 import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -78,8 +79,6 @@ private fun visibleAsteroidsFor(points: Map<XY, Char>, laser: XY): List<Pair<XY,
     return groupedByAngle
         .mapNotNull { it.value.minBy { it.second.distance } }
 }
-
-data class XY(val x: Int, val y: Int)
 
 data class DistanceAngle(val distance: Double, val angle: Double)
 
