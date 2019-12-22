@@ -277,4 +277,14 @@ class Tests {
 
         Assert.assertEquals(2772, result)
     }
+
+    @Test
+    fun `day 16 part 1 small input`() {
+        val input = listOf(1, 2, 3, 4, 5, 6, 7, 8)
+
+        val result = applyFft(input)
+
+        val expected = listOf(4, 8, 2, 2, 6, 1, 5, 8)
+        Assert.assertEquals(expected, result)
+    }
 }

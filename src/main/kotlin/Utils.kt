@@ -1,4 +1,6 @@
-fun Int.digits(): List<Int> = toString().toList().map { "$it".toInt() }
+import kotlin.math.absoluteValue
+
+fun Int.digits(): List<Int> = absoluteValue.toString().toList().map { "$it".toInt() }
 
 fun lcm(x: Long, y: Long, z: Long): Long = lcm(lcm(x, y), z)
 
