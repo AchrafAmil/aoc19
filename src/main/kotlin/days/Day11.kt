@@ -119,7 +119,7 @@ data class RobotLocation(val location: XY, val direction: DIRECTION) {
     }
 }
 
-fun XY.moveToward(direction: DIRECTION): XY {
+private fun XY.moveToward(direction: DIRECTION): XY {
     return when (direction) {
         DIRECTION.LEFT -> XY(x - 1, y)
         DIRECTION.TOP -> XY(x, y - 1)

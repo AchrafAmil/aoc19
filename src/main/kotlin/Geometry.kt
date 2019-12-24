@@ -20,6 +20,20 @@ data class XY(val x: Int, val y: Int) {
 enum class Direction(val value: Int) {
     NORTH(1), SOUTH(2), WEST(3), EAST(4);
 
+    fun turnLeft(): Direction = when (this) {
+        WEST -> SOUTH
+        NORTH -> WEST
+        EAST -> NORTH
+        SOUTH -> EAST
+    }
+
+    fun turnRight(): Direction = when (this) {
+        WEST -> NORTH
+        NORTH -> EAST
+        EAST -> SOUTH
+        SOUTH -> WEST
+    }
+
     companion object {
         private val map = values().associateBy(Direction::value)
         fun fromInt(int: Int) = map.getValue(int)
